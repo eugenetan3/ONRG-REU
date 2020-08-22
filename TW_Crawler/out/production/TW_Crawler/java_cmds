@@ -1,0 +1,2 @@
+javac -cp "twitter4j-core-3.0.3.jar:gson-2.2.4.jar:mysql-connector-java-5.1.16-bin.jar" *.java
+java -cp gson-2.2.4.jar:twitter4j-core-3.0.3.jar:mysql-connector-java-5.1.16-bin.jar:. Collect db_info.txt tokens.txt ids.txt

@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="TW_Crawler">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/twitter4j-media-support-3.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/twitter4j-stream-3.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/gson-2.2.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/twitter4j-async-3.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/mysql-connector-java-5.1.16-bin.jar!/" />
+      <root url="jar://$PROJECT_DIR$/twitter4j-core-3.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/twitter4j-examples-3.0.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

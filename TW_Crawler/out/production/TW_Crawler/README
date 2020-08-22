@@ -1,0 +1,62 @@
+updated: 1/29/2014
+twitter4j.jar updated 3.0.3 -> 3.0.5
+updated: 1/15/2014
+
+Assuming all the stuffs are in the directory: /home/saed/Desktop/TW_Crawler/out/production/TW_Crawler//, and we are also in the same directory in the command line.
+
+1. To run the program, three .jar files need to be included:
+
+java -cp "/home/saed/Desktop/TW_Crawler/out/production/TW_Crawler//gson-2.2.4.jar:/home/saed/Desktop/TW_Crawler/out/production/TW_Crawler//twitter4j-core-3.0.5.jar:/home/saed/Desktop/TW_Crawler/out/production/TW_Crawler//mysql-connector-java-5.1.16-bin.jar:/home/saed/Desktop/TW_Crawler/out/production/TW_Crawler//" Collect [database file] [token file] [twitter id file] [cmd]
+
+The file containing main() function is Collect.java, so Collect above is the .class file to be run. 
+
+2. [database file]
+This file contains the information of a database into which the collected twitter stuff is put. The information includes username, password, database name, table names(optional), etc. One example of this file would look like:
+
+host : localhost
+database : tw_cross
+username: xxxxx
+password: xxxxx
+port : 3306
+tables : users tweets urls [fo_fr]
+
+So the database name is tw_cross, and the three tables are users, tweets, and urls. The last line in the file(i.e.tables) is optional, if not specified, the names of the tables would depend on the time when the program is executed. 
+
+Make sure inside the database, the server characterset  and Db chracterset is utf8mb4; client characterset can be utf8. When creating the database, using the statement "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci" after the database name.(e.g. CREATE DATABASE IF NOT EXISTS tw_cross CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;)
+
+There is a bug which I have not fixed:  THE DATABASE(tw_cross) NEED TO BE CREADTED BEFORE RUNNING THE PROGRAM(tables do not have to be created before running).
+
+3. [token file]
+This is used for authentication. One example of this file would look like:
+
+xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx     
+xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx     
+xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx     
+
+Each line has four parts: Consumer key, Consumer secret, Access token, and Access token secret, respectively. Each of them is separated by a space, and each group of them occupies one line. Those tokens can be easily obtained if you have a twitter account.
+
+4. [twitter id file]
+This is just a list of twitter ids you are interested in, each one of them occupies one line:
+
+11111111111
+2222222222
+333333333333
+
+
+5.[cmd]
+This can be a single character or a string, which decides what commands to run:
+
+u - user info
+t - tweets and urls in the tweets
+fr - random 25 friends ( left from previous version)
+fo - random 3000 followers ( left from previous version)
+p - update existing databases(i.e. collect only new tweets from the same users) ( not tested enough, not efficient )
+
+Those commands can be used together, but using them separately is recommended(i.e. running the program multiple times with different commands).
+
+6. Summary:
+One possible command to execute the program could be :
+
+java -cp "/home/saed/TW_Crawler/out/production/TW_Crawler/gson-2.2.4.jar:/home/saed/TW_Crawler/out/production/TW_Crawler/twitter4j-core-3.0.5.jar:/home/saed/TW_Crawler/out/production/TW_Crawler/mysql-connector-java-5.1.16-bin.jar:/home/saed/TW_Crawler/out/production/TW_Crawler/" Collect db.txt tokens.txt top5k fr
+
+which collects the information of users whose ids are in the file ids.txt

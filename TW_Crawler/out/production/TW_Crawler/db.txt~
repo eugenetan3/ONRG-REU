@@ -1,0 +1,6 @@
+host : localhost
+database : LMA_friends
+username: root
+password: 792730
+port : 3306
+tables : users tweets urls fofr
