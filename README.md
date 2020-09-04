@@ -1,7 +1,11 @@
 # WorkingDir
 
-| Tables        | Are           | Cool  |
-| ------------- |:-------------:| -----:|
-| col 3 is      | right-aligned | $1600 |
-| col 2 is      | centered      |   $12 |
-| zebra stripes | are neat      |    $1 |
+| Function | Data Collected | Current Status  | Language | Usage
+|:-------------|:-------------|:-------------|:-------------| :-------------|
+| Initialize() | Creates date, base-path, and the database manager object(s) which are referenced throughout the program for system file management. | Working as intended. Creates the date, base-path for file locations, and dbm. | Python 3.8.3 | I am using the existing code from its Python 2 source file. No real revisions were made outside of the initial port from Python 2.7 to Python 2.8.3 |
+| File_diff() |  Computes the difference betwen two files by using a set. Writing one file into the set, any missing lines are then written to the outfile. Content of the outfile becomes infile1 - infile2. | Working as intended. No issues occuring during execution. | Python 3.8.3 | I am using the existing code from its Python 2 source file. No real revisions were made outside of the initial port from Python 2.7 to Python 2.8.3 |
+| Unix_sort() | Takes a file as an input and sorts the file based on column order. Performs an UNIX sort with command: sort -n -k (numeric and key sort)    | Working as intended. Performs a UNIX sort and returns sorted result into a specified outfile on base path. | Pyhon 3.8.3 | I am using the existing code from its Python 2 source file. No real revisions were made outside of the initial port from Python 2.7 to Python 2.8.3 |
+| Text() | Performs an HTML textual replacement to the provided item. | Working as intended. No issues occuring during execution. | Python 3.8.3 | I am using the existing code from its Python 2 source file. No real revisions were made outside of the initial port from Python 2.7 to Python 2.8.3
+| Create_urls() | Creates the URL paths used to crawl the Social Bakers website. Data output of this function is a collection of URLs indicating the pages to be read from and what categories were specified in the URL path. | Working as intended. No issues occuring during execution. | Python 3.8.3 | I am using the existing code from its Python 2 source file. No real revisions were made outside of the initial port from Python 2.7 to Python 2.8.3
+| Crawl_socials() | Function collects data by reading HTML data from the Socialbakers website. Data is retrieved by retrieving the HTML and parsing out relevant details of the users on each page (name, user id, profile details, etc). Data collected is outputted into labelled data files within directories corresponding to the crawled category. | Occasionally, because Socialbakers update the paths of URLs, some pages will no longer exist and provide an error message (fixeable by changing the path to the newest path / category). Socialbakers has swapped to a platform non-page-dependent, might require a membership to read through more than the initial front page. | Python 3.8.3 | I am using the existing code from its Python 2 source file. No real revisions were made outside of the initial port from Python 2.7 to Python 2.8.3
+ 
