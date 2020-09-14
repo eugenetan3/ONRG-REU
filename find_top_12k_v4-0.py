@@ -16,7 +16,13 @@ import time
 import os
 import re    
 
+'''
+Initial Categories that indicate the sections or subcategories of the socialbakers website to be crawled and read from.
 
+Each categories is fit into sub categories in a JSON format that essentially depicts a tree where each branch indicates
+another category from which more subcategories exist.
+(ie. brands has multiple items within it, such as airlines alcohol etc)
+'''
 categories = {'brands': {'accommodation': [],
                          'airlines': [],
                          'alcohol': ['beer', 'spirits', 'wine'],
@@ -107,6 +113,7 @@ categories = {'brands': {'accommodation': [],
                         'sport-organization']
               }
 
+'''Initial hard coded items to be used to organize pages to be read and cut offs of pages'''
 base_url = 'http://www.socialbakers.com/statistics/twitter/profiles/'
 first_page = ['1', '6', '11', '16', '21', '26', '31', '36', '41', '46', '51', '56', '61', '66', '71', '76', '81', '86',
              '91', '96']
@@ -120,29 +127,30 @@ def initialize():
     #     raw_input("Press any key to continue...")
     # except SyntaxError:
     #     pass
-    date = time.strftime("%Y%m%d")
+    date = time.strftime("%Y%m%d") #Create the date object that indicates the time executed
     # date = '20170404'
-    base_path = './data/top_accounts_%s/' % date
-    if not os.path.exists(base_path):
+    base_path = './data/top_accounts_%s/' % date #Set the base path that the source code will direct through and search things for
+    if not os.path.exists(base_path): #Should it not exist create the new base path
         os.mkdir(base_path)
-    for super_cat in categories.keys():
-        if not os.path.exists(base_path + super_cat):
+    for super_cat in categories.keys(): #Should any of the category folders not exist, create new subdirectories within the base path
+        if not os.path.exists(base_path + super_cat): #Should paths not exist, form them by using the os import
             os.mkdir(base_path + super_cat)
 
+    #Establish connection to the Elite_Weekly database using Robert Macy's credentials
     dbm = mysql.connector.connect(host='localhost',
                                   user='rmacy',
                                   passwd='RWM3cyrus',
                                   db='Elite_Weekly')
 
-    cursor = dbm.cursor()
-    data_base_creation_query = "CREATE DATABASE IF NOT EXISTS Elite_Weekly;"
+    cursor = dbm.cursor() #Form cursor
+    data_base_creation_query = "CREATE DATABASE IF NOT EXISTS Elite_Weekly;" #Query that catches and creates databse
     cursor.execute(data_base_creation_query)
     cursor.close()
     dbm = mysql.connector.connect(host='localhost',
                                   user='rmacy',
                                   passwd='RWM3cyrus',
                                   db='Elite_Weekly')
-    return dbm, date, base_path
+    return dbm, date, base_path #Return create items as referenceable objects in the main program.
 
 
 def file_diff(infile1, infile2, outfile, index1=-1, sep1='', index2=-1, sep2=''):
@@ -157,26 +165,26 @@ def file_diff(infile1, infile2, outfile, index1=-1, sep1='', index2=-1, sep2='')
     :return: a file that contains the difference of two specific columns of two files. Note that order of infiles matters! the content of outfile is file1 - file2
              and the columns in outfile is similar to infile1.
     """
-    set1 = set()
-    outf = open(outfile, 'w')
-    with open(infile2) as top:
+    set1 = set() #Initialize base set
+    outf = open(outfile, 'w') #Open the outfile and write to the outfile
+    with open(infile2) as top: #Open the infile2
         for line in top:
             if sep2 != '':
-                set1.add(str(line.strip().split(sep2)[index2]))
+                set1.add(str(line.strip().split(sep2)[index2])) #Append to the set if not space
             else:
-                set1.add(str(line.strip()))
+                set1.add(str(line.strip())) #Append to the set if a space
 
-    with open(infile1) as fp1:
-        for line in fp1:
-            if sep1 != '':
-                uid = str(line.strip().split(sep1)[index1])
-                if uid not in set1:
-                    outf.write(line)
+    with open(infile1) as fp1: #Open the infile1
+        for line in fp1: 
+            if sep1 != '': #Check if sep is empty space
+                uid = str(line.strip().split(sep1)[index1])  #UID is the given object obtained from column
+                if uid not in set1: #If the UID is not in the initialized base set of items that exist already, then a difference between infile1 and 2 has been spotted
+                    outf.write(line) #Write difference to outfile
             else:
                 uid = str(line.strip())
-                if uid not in set1:
-                    outf.write(line)
-    outf.close()
+                if uid not in set1: #If the UID is not in the initialized base set of items that exist already, then a difference between infile1 and 2 has been spotted 
+                    outf.write(line) #Write difference to outfile
+    outf.close() #Close outfile
 
 
 def unix_sort(source_file, column_number, dest_file, asc=True, separator=''):
@@ -184,9 +192,9 @@ def unix_sort(source_file, column_number, dest_file, asc=True, separator=''):
     This function takes a file as an input and sorts it based on one of the columns using unix command sort. The
     output of this function is a sorted version of the input file. column number starts from 1.
     """
-    if asc:
+    if asc: #Delimitter checking if is ASCII sort
         command = 'sort -n -k' + str(
-            column_number) + " -r  --field-separator='" + separator + "' " + source_file + ' > ' + dest_file
+            column_number) + " -r  --field-separator='" + separator + "' " + source_file + ' > ' + dest_file #Command from the OS, to sort
         print(command)
         os.system(command)
     else:
@@ -239,49 +247,48 @@ def crawl_social(urls, path):
     for url in urls:
         with open(path + url[56:].split('/')[0] + '/' + url[56:].replace('/', '_'), 'w') as fp:
             try:
-                print('getting html content for url: %s' % url)
-                page = requests.get(url)
-                tree = html.fromstring(page.text)
+                print('Retrieving html content for url: %s' % url)
+                cookies = dict(knownUser="%7B%22leadFormSent%22%3Atrue%7D")
+                page = requests.get(url, cookies=cookies)
+                tree = html.fromstring(page.content)
                 table = tree.xpath('//table[@class="brand-table-list"]')[0]
                 data = [[text(td) for td in tr.xpath('td')] for tr in table.xpath('//tr')]
                 ids = table.xpath('//a[@class="acc-placeholder-img"]')
+                #print(data) 
                 name_id = {}
                 #print("hnere")
                 for uid in ids:
                     name_id[uid.attrib['href'].split('/')[-1].split('-')[1]] = uid.attrib['href'].split('/')[-1].split('-')[0]
                 for row in data:
-                    #print(row)
                     followings = None
                     followers = None
                     name = None
                     uid = None
                     user_country = None
-                    #print("hnere")
+                    
                     if len(row) == 4: # ADDED BY: ROBERT MACY (Social bakers' data reformated so this text object only has 4 parts now.)
                    # if len(row) == 5: # COMMENTED BY: ROBERT MACY (Replaced by above line).
     
                         '''obtaining name and id'''
                         name = row[1].split()[-1][2:-1]
-                        #print(name)
+                        
                         name = name.decode("utf-8")
-                        #print(name)
+                        
                         uid = name_id[name.lower()]
-                        #print(uid)
+                        
                         '''Obtaining user country'''
                         status_code = 0
                         while status_code != 200:
                             new_url = 'http://www.socialbakers.com/statistics/twitter/profiles/detail/' + uid + '-' + name
                             while True:
                                 try:
-                                    #print("hnere")
                                     new_page = requests.get(new_url)
                                     break
                                 except Exception:
-                                    logging.error(e)
                                     logging.info('sleeping for 5 seconds...')
                                     time.sleep(5)
                                     continue
-                            print("hnere")
+                            
                             status_code = new_page.status_code
                             if status_code != 200:
                                 logging.error(status_code)
@@ -326,10 +333,10 @@ def crawl_social(urls, path):
                             user_country) + '\n')
     
                     '''delay in order not to get blacklisted'''
-                    delay = np.random.rand()
+                    #delay = np.random.rand()
             except Exception:    # ADDED BY: ROBERT MACY
                 print('error occured for a url, sleeping for 10 seconds...') # ADDED BY: ROBERT MACY
-                delay = np.random.rand() * 10 # ADDED BY: ROBERT MACY
+                #delay = np.random.rand() * 10 # ADDED BY: ROBERT MACY
 
 def create_directories(path):
     """
@@ -482,18 +489,18 @@ def find_friends(id_file, token_file, date, dbm):
                 friends_ids.extend(search['ids'])
                 next_cursor = search["next_cursor"]
             except twython.TwythonRateLimitError:
-                print("token number is %d" % (token_counter % len(all_tokens)))
+                print("Token number: %d was tried and exhausted" % (token_counter % len(all_tokens)))
                 token_counter += 1
             except Exception:
                 break
 
             if token_counter % len(all_tokens) == 0:
                 # sleep_amount = 900 
-                sleep_amount = 900
-                # if sleep_amount < 0:
-                    # sleep_amount = 0
+                sleep_amount = 5
+                if sleep_amount < 0:
+                    sleep_amount = 0
                 last_timeout = time.time()
-                print("Tokens are exhausted, sleeping for %f minutes" % (sleep_amount / 60.0))
+                print("All tokens are exhausted, sleeping for %f seconds" % (sleep_amount))
                 time.sleep(sleep_amount)
                 token_counter += 1
 
@@ -590,7 +597,7 @@ def friend_finder(id_file, token_file, date, dbm):
                 break
 
             if token_counter % len(all_tokens) == 0:
-                sleep_amount = 900
+                sleep_amount = 5
                 if sleep_amount < 0:
                     sleep_amount = 0
                 last_timeout = time.time()
@@ -600,15 +607,15 @@ def friend_finder(id_file, token_file, date, dbm):
 
         if len(friends_ids):
             print('Inserting into database for user %s ...' % user)
-        for fr_id in friends_ids:
-            q = "INSERT INTO Elite_Weekly.fofr_%s (follower_id, friend_id) VALUES (%s, %s);" % (date, user, fr_id)
-            cursor.execute(q.encode('utf-8'))
+            for fr_id in friends_ids:
+                q = "INSERT INTO Elite_Weekly.fofr_%s (follower_id, friend_id) VALUES (%s, %s);" % (date, user, fr_id)
+                cursor.execute(q.encode('utf-8'))
         dbm.commit()
 
     cursor.close()
     dbm.close()
     tokens.close()
-    print('Finding griends of most followed friends finished.')
+    print('Finding friends of most followed friends finished.')
 
 
 def name_finder(id_file, token_file, outfile):
@@ -852,17 +859,23 @@ def topxk_ranks(topxk_sourced_file, out_file):
         out.write('Number of followers:\t' + topxk_dict[group][-1][0] + '\t\t\t' + topxk_dict[group][0][0] + '\n')
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
+#    main()
+
+def main():
     print ("Initializing...")
     
     dbm, date, base_path = initialize()
     
     urls = create_urls()
-
-
+    
+    
     print ("Crawling social_bakers started")
     crawl_social(urls, base_path) #MODIFIED BY : ROBERT MACY (don't need this for run on 20160804 because I collected SocialBaker Data on 20160801)
     
+    #return 
+    
+
     print ("Crawling social baker is finished")
     print ("Organizing files...")
     for k in categories.keys():
@@ -872,6 +885,7 @@ if __name__ == '__main__':
         tmp_path = base_path + k
         organize_files(tmp_path)
     join(base_path)
+    global all_accounts #added
     all_accounts = set()
     all_accounts = joined_join(base_path)
     print ("%d accounts were crawled from social baker" % len(all_accounts))
@@ -880,9 +894,16 @@ if __name__ == '__main__':
         for item in all_accounts:
             fp.write(','.join(item.strip().split('\t')) + '\n')
 
+    #return
+    
+
     print ('sort the file, final_join, based on number of followers.')
     unix_sort(base_path + 'final_join', 4, base_path + 'final_join.sorted', asc=True, separator=',')
     
+    #return
+
+    
+
     all_dict = {} #START PLACING ALL FOUND USERS IN DICTIONARY
     social_baker_dict = {}
     with open(base_path + 'final_join.sorted') as fp:
@@ -903,6 +924,8 @@ if __name__ == '__main__':
             all_dict[uid] = [int(followers_count), source] # ADDED BY : [SAED REZAEI] MODIFIED BY : [ROBERT MACY]
     social_baker_users = set(social_baker_dict.keys())
 
+    #return
+    
     print ('finding top12k from random walk')
     local_conn = MongoClient()
     db = local_conn.MRW
@@ -963,6 +986,9 @@ if __name__ == '__main__':
             print ("Error encountered")
     rds_users = set(rds_dict.keys())
 
+    #return
+    
+    
     print ('get the union of social baker top12k and random walk top12k (MRW and RDS) and select top 12k of the union')
     sorted_all = sorted(all_dict.items(), key=operator.itemgetter(1))
     top12k = sorted_all[-12000:] 
@@ -972,12 +998,15 @@ if __name__ == '__main__':
         for item in top12k:
             outfile.write(str(item[0]) + ',' +  str(item[1]) + '\n')
 #            item[1] = item[1][0] # ADDED BY : ROBERT MACY (convert top12k back to original formatting)
+
     top12k_set = set()
     print ("store top12k of all three sets into file top12k")
     with open(base_path + 'top12k', 'w') as outfile:
         for item in top12k:
             top12k_set.add(item[0])
             outfile.write(str(item[0]) + '\n')
+    
+    #return
     
     dbm = mysql.connector.connect(host='localhost',
                                   user='eugenet',
@@ -986,6 +1015,9 @@ if __name__ == '__main__':
     
     print ('find social tags of social baker top12k from file and store them into social_baker table')
     find_social_tags_from_file(base_path, date, dbm)
+
+    #return
+    
 
     print ('find those users who are in union AND in the rw_top12k but not in sb_top12k')
     significant_others = top12k_set - social_baker_users
@@ -1029,18 +1061,19 @@ if __name__ == '__main__':
         print("move the other_significants_social into mysql_output folder where sql server has access to.")
         os.rename(base_path + 'other_significants_social', '/home/eugenet/mysql_output/other_significants_social_' + date)
 
-#chunk of code that uploads social information of the other_significants into table
         dbm = mysql.connector.connect(host='localhost',
                                       user='rmacy',
                                       passwd='RWM3cyrus',
                                       db='Elite_Weekly')
 
-        #print("store social information of other_significants into social_baker table")
+   
         social_query = "LOAD DATA LOCAL INFILE '/home/eugenet/mysql_output/other_significants_social_%s' INTO TABLE Elite_Weekly.social_baker FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';" % (date)
-        #social_query causes mariaDB to throw error (mariadb used command zzzz)
+    
         cursor = dbm.cursor()
         #cursor.execute(social_query) #command usually fails can technically ignore lines 1019 to 1032 if not inserting into table.
         os.rename('/home/eugenet/mysql_output/other_significants_social_' + date, base_path + 'other_significants_social')
+    
+    return
     
     dbm = mysql.connector.connect(host='localhost',
                                   user='rmacy',
@@ -1049,6 +1082,8 @@ if __name__ == '__main__':
     
     print ("call find_friend function to collect friends of top12k and store them into fofr table")
     find_friends(base_path + 'top12k', 'token.txt', date, dbm)
+
+    return
     
     print ('create db.txt file based on date')
     with open(base_path + 'db_%s.txt' % date, 'w') as db:
@@ -1083,9 +1118,13 @@ if __name__ == '__main__':
 
     os.system(command)
 
+    #return 
+    
     print ("call file_diff function to remove the top12k users from list of friends and to store the result in pure_friends file")
     file_diff('/home/eugenet/mysql_output/friends_%s' % date, base_path + 'top12k', base_path + 'pure_friends', index1=0, sep1=',')
 
+    #return
+    
     print ("sort the pure_friends file based on number of followers")
     unix_sort(base_path + 'pure_friends', 2, base_path + 'pure_friends.sorted', separator=',')
 
@@ -1099,8 +1138,13 @@ if __name__ == '__main__':
                 if cnt == 12000: 
                     break
     
+    #return
+    
+
     print ("call follower_counter function to count the followers of the top12k of most followed friends and to store them in most_followed_friends file")
     followers_counter(base_path + 'pure_friends.sorted.top12k', 'token.txt', base_path + 'most_followed_friends') #changed 8/21/2020 changed 'tokens_LMA1' to token.txt , parameter 2
+    
+    #return
     
     dbm = mysql.connector.connect(host='localhost',
                                   user='rmacy',
@@ -1123,10 +1167,13 @@ if __name__ == '__main__':
                                   user='rmacy',
                                   passwd='RWM3cyrus',
                                   db='Elite_Weekly')
+    #exit()
     
     print ("call friend_finder function to add the friends of finalized important users to the existing database")
     friend_finder(base_path + 'most_followed_friends.final', 'token.txt', date, dbm) #changed 8/21/2020 changed 'tokens_LMA1' to token.txt , parameter 2
     
+    #return
+
     #print ("call Morgan's code to collect profile of finalized important users.")
     #os.system(
     #    'java -cp "./TW_Crawler/out/production/TW_Crawler/gson-2.8.6.jar:./TW_Crawler/out/production/TW_Crawler/twitter4j-core-3.0.5.jar:./TW_Crawler/out/production/TW_Crawler/mysql-connector-java-5.1.16-bin.jar:./TW_Crawler/out/production/TW_Crawler/" Collect %sdb_%s.txt token.txt %smost_followed_friends.final u' % (
@@ -1135,11 +1182,13 @@ if __name__ == '__main__':
     print ("call name_finder function to create URLs to see if the finalized important users could be found on socialbakers.com")
     name_finder(base_path + 'most_followed_friends.final', 'token.txt', base_path + 'most_followed_friends_with_name') #changed 8/21/2020 changed 'tokens_LMA1' to token.txt , parameter 2
     
+    #return
     
     print ("call social_country_finder function to crawl socialbaker.com to obtain country and social tags for most followed friends.")
     social_country_finder(base_path + 'most_followed_friends_with_name', base_path + 'most_followed_friends_error',
                           base_path + 'most_followed_friends_social')
-
+    #return
+    
     print ("move the most_followed_friends_social into mysql_output folder where sql server has access to.")
     os.rename(base_path + 'most_followed_friends_social',
               '/home/eugenet/mysql_output/most_followed_friends_social_' + date)
@@ -1166,8 +1215,8 @@ if __name__ == '__main__':
     os.rename('/home/eugenet/mysql_output/top12k_' + date, base_path + 'top12k')
 
 
-
-
+    #return
+    
     dbm = MySQLdb.connect(host='localhost',
                           user='rmacy',
                           passwd='RWM3cyrus',
@@ -1384,6 +1433,9 @@ if __name__ == '__main__':
                 pass
     dbm.close()
     
+    #return
+    
+
     user_dict = {}
     dbm = mysql.connector.connect(host='localhost',
                                   user='rmacy',
@@ -1436,7 +1488,7 @@ if __name__ == '__main__':
 
         second_param = user_tweet_counts[i][1]
         second_len = len(second_param)-1
-        second_param = second_param[0:length]
+        second_param = second_param[0:second_len]
         user_tweet_counts[i][1] = second_param
 
         user_tweet_counts[i][1] = int(user_tweet_counts[i][1])
@@ -1449,7 +1501,8 @@ if __name__ == '__main__':
         l_f.write(str(user) + ',' + ','.join(user_dict[user]) + '\n')
     l_f.close()
     
-
+    #return
+    
     topxk_sourced_lines = find_elite_most_followed_friends(base_path + 'pure_friends', base_path + 'top12k_sourced' , 'token.txt') #changed 8/21/2020 changed 'tokens_LMA1' to token.txt , parameter 3
     topxk_sourced_file = base_path + 'top12k_sourced_with_mff_' + date
     out = open(topxk_sourced_file, 'w')
@@ -1461,3 +1514,6 @@ if __name__ == '__main__':
     topxk_ranks_file = base_path + 'top12k_source_ranks_' + date
     topxk_ranks(topxk_sourced_file, topxk_ranks_file)
     print ('\n\n======   Done!  ======== \n\n')
+
+if __name__ == '__main__':
+    main()
